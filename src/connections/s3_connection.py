@@ -1,8 +1,9 @@
 import boto3
 import pandas as pd
-from src.logger import get_logger
 from io import StringIO
+from src.logger import get_logger  # ✅ Import your custom logger
 
+# Initialize a module-specific logger
 logger = get_logger(__name__)
 
 class S3Operations:
@@ -32,4 +33,3 @@ class S3Operations:
         except Exception as e:
             logger.exception(f"Failed to fetch '{file_key}' from S3: {e}")
             return None
-
