@@ -22,14 +22,14 @@ RAW_DATA_DIR = Path(os.getenv('RAW_DATA_DIR', './data/raw'))
 params_path=os.getenv('PARAMS_PATH', 'params.yaml')
 
 
-def save_data(train_data: pd.DataFrame, test_data: pd.DataFrame, data_path: str) -> None:
+def save_data(raw_data: pd.DataFrame, data_path: str) -> None:
     """Save the train and test datasets."""
     try:
         raw_data_path = os.path.join(data_path)
         os.makedirs(raw_data_path, exist_ok=True)
-        train_data.to_csv(os.path.join(raw_data_path, "train.csv"), index=False)
-        test_data.to_csv(os.path.join(raw_data_path, "test.csv"), index=False)
-        logger.debug('Train and test data saved to %s', raw_data_path)
+        raw_data.to_csv(os.path.join(raw_data_path, "raw_data.csv"), index=False)
+        # test_data.to_csv(os.path.join(raw_data_path, "test.csv"), index=False)
+        logger.debug('raw data data saved to %s', raw_data_path)
     except Exception as e:
         logger.error('Unexpected error occurred while saving the data: %s', e)
         raise
@@ -62,13 +62,9 @@ def main() -> None:
         df = s3_client.fetch_csv(FILE_NAME)
 
 
-        # load parameters
-        params = load_params(params_path)
-        test_size = params['data_ingestion']['test_size']
 
         # Save raw data locally
-        train_data, test_data = train_test_split(df, test_size=test_size, random_state=42)
-        save_data(train_data, test_data, RAW_DATA_DIR)
+        save_data(df, RAW_DATA_DIR)
 
         logger.info("\n --------------------------------------------* completed data ingestion process... *-----------------------------------------------------\n")
 
