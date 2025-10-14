@@ -28,7 +28,6 @@ def save_data(raw_data: pd.DataFrame, data_path: str) -> None:
         raw_data_path = os.path.join(data_path)
         os.makedirs(raw_data_path, exist_ok=True)
         raw_data.to_csv(os.path.join(raw_data_path, "raw_data.csv"), index=False)
-        # test_data.to_csv(os.path.join(raw_data_path, "test.csv"), index=False)
         logger.debug('raw data data saved to %s', raw_data_path)
     except Exception as e:
         logger.error('Unexpected error occurred while saving the data: %s', e)
