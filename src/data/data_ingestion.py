@@ -1,7 +1,10 @@
 import os
 from pathlib import Path
 import pandas as pd
+import yaml
 from dotenv import load_dotenv
+from sklearn.model_selection import train_test_split
+
 from src.logger import get_logger
 from src.connections.s3_connection import S3Operations
 
@@ -16,29 +19,37 @@ AWS_SECRET_KEY = os.getenv('AWS_SECRET_ACCESS_KEY')
 REGION_NAME = os.getenv('region', 'us-east-1')
 FILE_NAME = os.getenv('file_name', 'loan_approval_dataset.csv')
 RAW_DATA_DIR = Path(os.getenv('RAW_DATA_DIR', './data/raw'))
+params_path=os.getenv('PARAMS_PATH', 'params.yaml')
 
 
-def save_data(raw_data: pd.DataFrame, data_path: Path) -> None:
-    """
-    Save raw data to local CSV.
-
-    Args:
-        raw_data (pd.DataFrame): DataFrame to save.
-        data_path (Path): Directory path to save the CSV file.
-    """
-    if raw_data is None or raw_data.empty:
-        logger.warning("No data to save.")
-        return
-
+def save_data(train_data: pd.DataFrame, test_data: pd.DataFrame, data_path: str) -> None:
+    """Save the train and test datasets."""
     try:
-        data_path.mkdir(parents=True, exist_ok=True)
-        file_path = data_path / 'raw_data.csv'
-        raw_data.to_csv(file_path, index=False)
-        logger.info(f"Data saved successfully at {file_path}")
+        raw_data_path = os.path.join(data_path)
+        os.makedirs(raw_data_path, exist_ok=True)
+        train_data.to_csv(os.path.join(raw_data_path, "train.csv"), index=False)
+        test_data.to_csv(os.path.join(raw_data_path, "test.csv"), index=False)
+        logger.debug('Train and test data saved to %s', raw_data_path)
     except Exception as e:
-        logger.error(f"Unexpected error occurred while saving data: {e}")
+        logger.error('Unexpected error occurred while saving the data: %s', e)
         raise
 
+def load_params(params_path: str) -> dict:
+    """Load parameters from a YAML file."""
+    try:
+        with open(params_path, 'r') as file:
+            params = yaml.safe_load(file)
+        logger.info('Parameters retrieved from %s', params_path)
+        return params
+    except FileNotFoundError:
+        logger.error('File not found: %s', params_path)
+        raise
+    except yaml.YAMLError as e:
+        logger.error('YAML error: %s', e)
+        raise
+    except Exception as e:
+        logger.error('Unexpected error: %s', e)
+        raise
 
 def main() -> None:
     """Main function for data ingestion pipeline."""
@@ -50,8 +61,14 @@ def main() -> None:
         s3_client = S3Operations(BUCKET_NAME, AWS_ACCESS_KEY, AWS_SECRET_KEY, region_name=REGION_NAME)
         df = s3_client.fetch_csv(FILE_NAME)
 
+
+        # load parameters
+        params = load_params(params_path)
+        test_size = params['data_ingestion']['test_size']
+
         # Save raw data locally
-        save_data(df, RAW_DATA_DIR)
+        train_data, test_data = train_test_split(df, test_size=test_size, random_state=42)
+        save_data(train_data, test_data, RAW_DATA_DIR)
 
         logger.info("\n --------------------------------------------* completed data ingestion process... *-----------------------------------------------------\n")
 
