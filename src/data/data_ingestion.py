@@ -33,34 +33,15 @@ def save_data(raw_data: pd.DataFrame, data_path: str) -> None:
         logger.error('Unexpected error occurred while saving the data: %s', e)
         raise
 
-def load_params(params_path: str) -> dict:
-    """Load parameters from a YAML file."""
-    try:
-        with open(params_path, 'r') as file:
-            params = yaml.safe_load(file)
-        logger.info('Parameters retrieved from %s', params_path)
-        return params
-    except FileNotFoundError:
-        logger.error('File not found: %s', params_path)
-        raise
-    except yaml.YAMLError as e:
-        logger.error('YAML error: %s', e)
-        raise
-    except Exception as e:
-        logger.error('Unexpected error: %s', e)
-        raise
 
 def main() -> None:
     """Main function for data ingestion pipeline."""
     try:
-
         logger.info("\n --------------------------------------------* Starting data ingestion process... *-----------------------------------------------------\n")
 
         # Initialize S3 client
         s3_client = S3Operations(BUCKET_NAME, AWS_ACCESS_KEY, AWS_SECRET_KEY, region_name=REGION_NAME)
         df = s3_client.fetch_csv(FILE_NAME)
-
-
 
         # Save raw data locally
         save_data(df, RAW_DATA_DIR)

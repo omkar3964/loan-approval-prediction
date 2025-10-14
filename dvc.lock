@@ -1,0 +1,77 @@
+schema: '2.0'
+stages:
+  data_ingestion:
+    cmd: python src/data/data_ingestion.py
+    deps:
+    - path: src/data/data_ingestion.py
+      hash: md5
+      md5: 7eacd11b8243f03979b82325579c7a1d
+      size: 2106
+    outs:
+    - path: data/raw/raw_data.csv
+      hash: md5
+      md5: 3d8ecb6acc324137fe4affc13655564f
+      size: 384337
+  data_preprocessing:
+    cmd: python src/data/data_preprocessing.py
+    deps:
+    - path: data/raw/raw_data.csv
+      hash: md5
+      md5: 3d8ecb6acc324137fe4affc13655564f
+      size: 384337
+    - path: src/data/data_preprocessing.py
+      hash: md5
+      md5: e2604023785fe8598dd52bc52cb30f1e
+      size: 3019
+    outs:
+    - path: data/processed/processed_data.csv
+      hash: md5
+      md5: 30e1e54eabbd4c8b8d9a7e185c5c9fd0
+      size: 382045
+  feature_engineering:
+    cmd: python src/features/feature_engineering.py
+    deps:
+    - path: data/processed/processed_data.csv
+      hash: md5
+      md5: 30e1e54eabbd4c8b8d9a7e185c5c9fd0
+      size: 382045
+    - path: src/features/feature_engineering.py
+      hash: md5
+      md5: 8d80be8cd16f0cf8da8c4b975c16f8d2
+      size: 5879
+    params:
+      params.yaml:
+        feature_engineering.test_size: 0.3
+    outs:
+    - path: data/processed/test.csv
+      hash: md5
+      md5: e6a0074b2cb17764c507857353b065a8
+      size: 285695
+    - path: data/processed/train.csv
+      hash: md5
+      md5: f34f01cfae99ccc062d87991ede64598
+      size: 666617
+  model_building:
+    cmd: python src/models/model_building.py
+    deps:
+    - path: data/processed/train.csv
+      hash: md5
+      md5: f34f01cfae99ccc062d87991ede64598
+      size: 666617
+    - path: src/models/model_building.py
+      hash: md5
+      md5: 8b70c792817562f5d8e4db0ead0ef07a
+      size: 3147
+    params:
+      params.yaml:
+        model_building:
+          n_estimators: 100
+          max_depth:
+          min_samples_split: 2
+          min_samples_leaf: 1
+          random_state: 42
+    outs:
+    - path: models/random_forest_model.pkl
+      hash: md5
+      md5: 6dab33f0c00cfd714a056ab7a5b610ea
+      size: 1231977

@@ -1,5 +1,6 @@
 import os
 
+import yaml
 from imblearn.over_sampling import SMOTE
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split
@@ -11,6 +12,24 @@ from src.logger import get_logger
 logger = get_logger("feature_engineering.py")
 PROCESSED_DATA_PATH='./data/processed/processed_data.csv'
 FEATURED_DATA_PATH='./data/processed'
+
+
+def load_params(params_path: str) -> dict:
+    """Load parameters from a YAML file."""
+    try:
+        with open(params_path, 'r') as file:
+            params = yaml.safe_load(file)
+        logger.info('Parameters retrieved from %s', params_path)
+        return params
+    except FileNotFoundError:
+        logger.error('File not found: %s', params_path)
+        raise
+    except yaml.YAMLError as e:
+        logger.error('YAML error: %s', e)
+        raise
+    except Exception as e:
+        logger.error('Unexpected error: %s', e)
+        raise
 
 
 def check_balance_dataset(X, y):
@@ -106,8 +125,10 @@ def main() -> None:
         X_final = feature_selection(pd.DataFrame(X_balanced, columns=X.columns), y_balanced)
 
         # Split into train and test sets
+        params = load_params(params_path='params.yaml')
+        test_size = params['feature_engineering']['test_size']
         X_train, X_test, y_train, y_test = train_test_split(
-            X_final, y_balanced, test_size=0.2, random_state=42, stratify=y_balanced
+            X_final, y_balanced, test_size=test_size, random_state=42, stratify=y_balanced
         )
         logger.info("Split dataset into training and testing sets.")
 
