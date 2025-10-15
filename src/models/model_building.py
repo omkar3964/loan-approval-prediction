@@ -88,6 +88,8 @@ def main() -> None:
         # saving model
         save_model(random_forest_model, MODEL_PATH)
 
+        logger.info("\n --------------------------------------------* completed model building process. *-----------------------------------------------------\n")
+
     except Exception as e:
         logger.error(f"Failed to complete the model building process: {e}")
         print(f"Error: {e}")
