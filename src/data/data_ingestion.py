@@ -1,9 +1,7 @@
 import os
 from pathlib import Path
 import pandas as pd
-import yaml
 from dotenv import load_dotenv
-from sklearn.model_selection import train_test_split
 
 from src.logger import get_logger
 from src.connections.s3_connection import S3Operations
